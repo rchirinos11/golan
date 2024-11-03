@@ -64,6 +64,8 @@ func wake(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	resp := []byte("Ok")
 	log.Println("Sending magic packet for mac:", mac)
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 }
