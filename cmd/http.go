@@ -2,21 +2,42 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	"github.com/rchirinos11/golan/wol"
 )
 
-var wolService wol.WolUtil
+var (
+	wolService wol.WolUtil
+	templater  *template.Template
+)
 
 func Run(port string) {
-	wolService = wol.WolUtil{}
-	http.HandleFunc("/golan/mac", getMac)
-	http.HandleFunc("/golan/wake", wake)
+	initVars()
+	handleAll()
 	log.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(port, nil))
+}
+
+func initVars() {
+	var err error
+	wolService = wol.WolUtil{}
+	templater, err = template.ParseGlob("views/*")
+	if err != nil {
+		log.Println("Error parsing templates", err)
+	}
+}
+
+func handleAll() {
+	http.HandleFunc("/golan/mac", getMac)
+	http.HandleFunc("/golan/wake", wake)
+	http.HandleFunc("/golan", index)
+	http.HandleFunc("/golan/click", click)
+	http.HandleFunc("/golan/hide", hide)
 }
 
 func getMac(w http.ResponseWriter, _ *http.Request) {
@@ -43,29 +64,58 @@ func getMac(w http.ResponseWriter, _ *http.Request) {
 
 // Wakes from preconfigured mac address
 func wake(w http.ResponseWriter, _ *http.Request) {
+	if err := triggerWol(w); err != nil {
+		return
+	}
+
+	resp := []byte("Ok")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
+func triggerWol(w http.ResponseWriter) error {
 	mac := os.Getenv("WOLMAC")
 	if mac == "" {
 		log.Println("Mac address to wake up not configured, set WOLMAC variable and restart the server")
 		w.WriteHeader(http.StatusConflict)
-		return
+		return fmt.Errorf("Mac address not configured")
 	}
 
 	magic, err := wolService.MakeMagic(mac)
 	if err != nil {
 		log.Println("Error creating magic packet", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	err = wolService.SendMagic(magic)
-	if err != nil {
+	log.Println("Sending magic packet for mac:", mac)
+	if err = wolService.SendMagic(magic); err != nil {
 		log.Println("Error sending magic packet", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	return err
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET: Index")
+	if err := templater.ExecuteTemplate(w, "main", nil); err != nil {
+		log.Println("Error executing template", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
 
-	resp := []byte("Ok")
-	log.Println("Sending magic packet for mac:", mac)
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+func click(w http.ResponseWriter, r *http.Request) {
+	log.Println("POST: Htmx method")
+	triggerWol(w)
+	if err := templater.ExecuteTemplate(w, "wake", nil); err != nil {
+		log.Println("Error executing template", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func hide(w http.ResponseWriter, _ *http.Request) {
+	log.Println("PUT: Hide method")
+	w.Write([]byte{})
 }

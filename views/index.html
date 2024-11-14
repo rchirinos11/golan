@@ -1,0 +1,26 @@
+{{ block "main" . }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Golan</title>
+    <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  </head>
+  <body>
+    <div class="container is-max-tablet level columns is-centered" style="height:100vh">
+      <div>
+        <div class="block button is-primary is-size-3 is-large is-rounded is-fullwidth"
+          hx-post="/golan/click" hx-target="#wake">
+          Wake-on-LAN</div>
+        <div id="wake" class="block has-text-centered"></div>
+      </div>
+    </div>
+  </body>
+</html>
+{{ end }}
+
+{{ block "wake" . }}
+<p class="is-size-5" hx-put="/golan/hide" hx-trigger="load delay:5s">Magic packet sent</p>
+{{ end }}
