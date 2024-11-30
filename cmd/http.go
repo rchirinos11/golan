@@ -33,9 +33,9 @@ func initVars() {
 }
 
 func handleAll() {
+	http.HandleFunc("/golan/", index)
 	http.HandleFunc("/golan/mac", getMac)
 	http.HandleFunc("/golan/wake", wake)
-	http.HandleFunc("/golan", index)
 	http.HandleFunc("/golan/click", click)
 	http.HandleFunc("/golan/hide", hide)
 }
