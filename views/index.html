@@ -12,7 +12,7 @@
     <div class="container is-max-tablet level columns is-centered" style="height:100vh">
       <div>
         <div class="block button is-primary is-size-3 is-large is-rounded is-fullwidth"
-          hx-post="/golan/click" hx-target="#wake">
+          hx-post="click" hx-target="#wake">
           Wake-on-LAN</div>
         <div id="wake" class="block has-text-centered"></div>
       </div>
@@ -22,5 +22,5 @@
 {{ end }}
 
 {{ block "wake" . }}
-<p class="is-size-5" hx-put="/golan/hide" hx-trigger="load delay:5s">Magic packet sent</p>
+<p class="is-size-5" hx-put="hide" hx-trigger="load delay:5s">Magic packet sent</p>
 {{ end }}
