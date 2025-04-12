@@ -1,0 +1,17 @@
+plugins {
+	id 'application'
+}
+
+sourceCompatibility = 17
+
+jar {
+  manifest {
+    attributes('Main-Class': 'Main')
+  }
+}
+
+sourceSets.main.java.srcDirs = ['.']
+
+application {
+    mainClass = 'Main'
+}
